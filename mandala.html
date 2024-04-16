@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mandalas with Improved Performance</title>
+    <style>
+        button {
+            font-size: 15px;
+            border-radius: 5px;
+            border: 2px solid #7cbde9;
+            background-color: aliceblue;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <label for="circleCount">Number of Circles:</label>
+    <input type="number" id="circleCount" value="5" min="1" max="10">
+    <button onclick="drawNewMandala()">Generate Mandala</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        //getting 2d context so i can draw 
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        //clearing the canvas
+
+        function drawMotif(ctx, x, y, size) {
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + size * 2, y);
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - size * 2, y);
+            ctx.stroke();
+        }
+        //this is my shape/motif that will repeat itself to look like a part of manadala art
+        //i just drew it using path
+
+
+        function drawMandala(ctx, x, y, size, depth, maxDepth) {
+            if (depth > maxDepth) return;
+
+            const numMotifs = 6 + 2 * depth;
+            const angleIncrement = (Math.PI * 2) / numMotifs;
+
+            for (let i = 0; i < numMotifs; i++) {
+                const angle = i * angleIncrement;
+                const motifX = x + Math.cos(angle) * size * depth;
+                const motifY = y + Math.sin(angle) * size * depth;
+
+                const color = `hsl(${(depth / maxDepth) * 360}, 100%, 50%)`;
+                ctx.strokeStyle = color;
+                ctx.save();
+                ctx.translate(motifX, motifY);
+                ctx.rotate(angle);
+                drawMotif(ctx, 0, 0, size * (maxDepth - depth + 1) / maxDepth);
+                ctx.restore();
+            }
+
+            if (depth < maxDepth) {
+                requestAnimationFrame(() => drawMandala(ctx, x, y, size, depth + 1, maxDepth));
+            }
+        }
+
+        //this function repeats my motifs to create a mandala
+        //depth is the number of times i want my motive to repeat but till below my max depth
+        //the numMotifs is the current number of drawn motifs which is currently set to start at 6 and then increase 2 
+        //the angle increment is the angle between the motifs where it devides a circle using the Math.PI * 2 / numMotifs formula
+
+
+        //THEN  i draw the actual loop for the motifs, the positions of the motif is calculated in the const motifx,motifY
+        //math.cos(angle) and math.sin(angle) determine the x and y coordinates on a circular plane. 
+        //for colour the hsl is affected by the recursion of the mandala and how deep it is so basically hsl(depth)
+        //the requestanimation frame is called when something is a bigger number than current depth
+        //the save restore makes sure that the motifs dont bother each other when they are getting drawn
+        //the translate and rotate makes sure the motifs are at the right place
+
+
+
+
+        function drawNewMandala() {
+            const circleCount = parseInt(document.getElementById('circleCount').value, 10);
+            clearCanvas();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxSize = Math.min(canvas.width, canvas.height) * 1.5;
+            drawMandala(ctx, centerX, centerY, maxSize / 20, 1, circleCount);
+        }
+
+        //added an input button so u can play w the number of circles/motifs 
+        //takes the circle count 
+
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawNewMandala();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    </script>
+</body>
+</html>
